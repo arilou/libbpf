@@ -4661,13 +4661,14 @@ struct btf *btf__load_vmlinux_btf(void)
 	struct utsname buf;
 	struct btf *btf;
 	int i, err;
+	struct stat sb;
 
 	uname(&buf);
 
 	for (i = 0; i < ARRAY_SIZE(locations); i++) {
 		snprintf(path, PATH_MAX, locations[i].path_fmt, buf.release);
 
-		if (access(path, R_OK))
+		if (stat(path, &sb))
 			continue;
 
 		if (locations[i].raw_btf)

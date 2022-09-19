@@ -882,8 +882,9 @@ __u32 get_kernel_version(void)
 	const char *ubuntu_kver_file = "/proc/version_signature";
 	__u32 major, minor, patch;
 	struct utsname info;
+	struct stat sb;
 
-	if (access(ubuntu_kver_file, R_OK) == 0) {
+	if (stat(ubuntu_kver_file, &sb) == 0) {
 		FILE *f;
 
 		f = fopen(ubuntu_kver_file, "r");
@@ -9908,9 +9909,10 @@ static int append_to_file(const char *file, const char *fmt, ...)
 static bool use_debugfs(void)
 {
 	static int has_debugfs = -1;
+	struct stat sb;
 
 	if (has_debugfs < 0)
-		has_debugfs = access(DEBUGFS, F_OK) == 0;
+		has_debugfs = stat(DEBUGFS, &sb) == 0;
 
 	return has_debugfs == 1;
 }
@@ -10718,6 +10720,7 @@ static int resolve_full_path(const char *file, char *result, size_t result_sz)
 		for (s = search_paths[i]; s != NULL; s = strchr(s, ':')) {
 			char *next_path;
 			int seg_len;
+			struct stat sb;
 
 			if (s[0] == ':')
 				s++;
@@ -10727,7 +10730,9 @@ static int resolve_full_path(const char *file, char *result, size_t result_sz)
 				continue;
 			snprintf(result, result_sz, "%.*s/%s", seg_len, s, file);
 			/* ensure it has required permissions */
-			if (access(result, perm) < 0)
+			if (stat(result, &sb) < 0)
+			    continue;
+			if ((sb.st_mode & (S_IROTH | S_IXOTH)) != (S_IROTH | S_IXOTH))
 				continue;
 			pr_debug("resolved '%s' to '%s'\n", file, result);
 			return 0;

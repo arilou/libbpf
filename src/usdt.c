@@ -7,6 +7,7 @@
 #include <libelf.h>
 #include <gelf.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <linux/ptrace.h>
 #include <linux/kernel.h>
 
@@ -257,6 +258,7 @@ struct usdt_manager *usdt_manager_new(struct bpf_object *obj)
 	static const char *ref_ctr_sysfs_path = "/sys/bus/event_source/devices/uprobe/format/ref_ctr_offset";
 	struct usdt_manager *man;
 	struct bpf_map *specs_map, *ip_to_spec_id_map;
+	struct stat sb;
 
 	specs_map = bpf_object__find_map_by_name(obj, "__bpf_usdt_specs");
 	ip_to_spec_id_map = bpf_object__find_map_by_name(obj, "__bpf_usdt_ip_to_spec_id");
@@ -282,7 +284,7 @@ struct usdt_manager *usdt_manager_new(struct bpf_object *obj)
 	 * If this is not supported, USDTs with semaphores will not be supported.
 	 * Added in: a6ca88b241d5 ("trace_uprobe: support reference counter in fd-based uprobe")
 	 */
-	man->has_sema_refcnt = access(ref_ctr_sysfs_path, F_OK) == 0;
+	man->has_sema_refcnt = stat(ref_ctr_sysfs_path, &sb) == 0;
 
 	return man;
 }
