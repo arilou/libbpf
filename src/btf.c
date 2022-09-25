@@ -4667,7 +4667,7 @@ struct btf *btf__load_vmlinux_btf(void)
 	for (i = 0; i < ARRAY_SIZE(locations); i++) {
 		snprintf(path, PATH_MAX, locations[i].path_fmt, buf.release);
 
-		if (access(path, R_OK))
+		if (faccessat(AT_FDCWD, path, R_OK, AT_EACCESS))
 			continue;
 
 		if (locations[i].raw_btf)
